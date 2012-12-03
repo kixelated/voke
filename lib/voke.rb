@@ -6,46 +6,52 @@ module Voke
     klass.extend(self)
   end
 
-  def voke(*argv)
-    command, arguments, options = voke_parse(*argv)
+  def help(command, *args)
+    if respond_to?(command.to_sym)
+      methods = [ command ]
+    else
+      methods = self.public_methods(false)
+    end
+
+    methods.each do |method_name|
+      method = self.method(method_name)
+      parameters = method.parameters
+
+      parts = parameters.collect do |type, name|
+        case type
+        when :req
+          name
+        when :opt
+          "[#{ name }]"
+        when :part
+          "[#{ name }*]"
+        end
+      end
+
+      puts "#{ $0 } #{ method_name } #{ parts.join(' ') }"
+    end
+  end
+
+  def voke(*args)
+    args = ARGV if args.empty?
+
+    command, arguments, options = voke_parse(*args)
     voke_method(command, arguments, options)
   end
 
   def voke_method(command, arguments, options)
-    raise "Show help" unless command
     method = method(command.to_sym)
-
-    method_arity = method.arity
-    method_parameters = method.parameters
-
-    if method_arity < 0
-      method_req = -method_arity - 1
-      method_opt = method_parameters.size - method_req
-    else
-      method_req = method_arity
-      method_opt = 0
-    end
-
-    arg_req = arguments.length
-
-    last_type, _ = method_parameters.last
-    last_req = (last_type == :req) ? 1 : 0
-
-    if arg_req >= method_req + method_opt
-      method.call(*arguments)
-    elsif arg_req + last_req >= method_req
-      method.call(*arguments, options)
-    else
-      raise ArgumentError, "wrong number of arguments (#{ arg_req + last_req } for #{ method_req })"
-    end
+    method.call(*arguments, options)
+  rescue
+    help(command, *arguments, options)
   end
 
-  def voke_parse(*argv)
-    command = argv.shift
+  def voke_parse(*args)
+    command = args.shift
     arguments = Array.new
     options = Hash.new
 
-    argv.each do |arg|
+    args.each do |arg|
       if arg =~ /^--(\w+)=(.*)$/
         key = $1.to_sym
         value = voke_parse_value($2)

@@ -111,13 +111,13 @@ describe Voke do
 
   describe ".voke_method" do
     # some helpers to make results more obvious
-    ARG1 = "arg1"
-    ARG2 = "arg2"
-    ARG3 = "arg3"
-    PARAMS = { :a => 1, :b => 2 }
+    ARG1 = :arg1
+    ARG2 = :arg2
+    ARG3 = :arg3
+    OPTIONS = { :option1 => 1, :option2 => 2 }
 
     def voke_method(method, *args)
-      TestVoke.voke_method(method, args, PARAMS)
+      TestVoke.voke_method(method, args, OPTIONS)
     end
 
     describe "zero option definition" do
@@ -128,10 +128,10 @@ describe Voke do
       end
 
       it "calls with no arguments" do
-        voke_method(:m0).must_equal []
+        lambda { voke_method(:m0) }.must_raise ArgumentError
       end
 
-      it "errors with arguments" do
+      it "calls with one argument" do
         lambda { voke_method(:m0, ARG1) }.must_raise ArgumentError
       end
     end
@@ -146,15 +146,21 @@ describe Voke do
       end
 
       it "calls with no arguments" do
-        voke_method(:m1).must_equal [ PARAMS ]
-        voke_method(:m2).must_equal [ PARAMS ]
-        voke_method(:n1).must_equal [ PARAMS ]
+        voke_method(:m1).must_equal [ OPTIONS ]
+        voke_method(:m2).must_equal [ OPTIONS ]
+        voke_method(:n1).must_equal [ OPTIONS ]
       end
 
-      it "calls with arguments" do
-        voke_method(:m1, ARG1).must_equal [ ARG1 ]
-        voke_method(:m2, ARG1).must_equal [ ARG1 ]
-        voke_method(:n1, ARG1).must_equal [ ARG1 ]
+      it "calls with one argument" do
+        lambda { voke_method(:m1, ARG1) }.must_raise ArgumentError
+        lambda { voke_method(:m2, ARG1) }.must_raise ArgumentError
+        voke_method(:n1, ARG1).must_equal [ ARG1, OPTIONS ]
+      end
+
+      it "calls with two arguments" do
+        lambda { voke_method(:m1, ARG1, ARG2) }.must_raise ArgumentError
+        lambda { voke_method(:m2, ARG1, ARG2) }.must_raise ArgumentError
+        voke_method(:n1, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
       end
     end
 
@@ -165,6 +171,7 @@ describe Voke do
           def m4(a,b=nil);[a,b];end
           def m5(a=nil,b);[a,b];end
           def m6(a=nil,b=nil);[a,b];end
+
           def n2(a,*b);[a]+b;end
           def n3(a=nil,*b);[a]+b;end
           def n4(*a,b);a+[b];end
@@ -174,36 +181,35 @@ describe Voke do
 
       it "calls with no arguments" do
         lambda { voke_method(:m3) }.must_raise ArgumentError
-        lambda { voke_method(:m4) }.must_raise ArgumentError
-        voke_method(:m5).must_equal [ nil, PARAMS ]
-        voke_method(:m6).must_equal [ PARAMS, nil ] # not ideal
-        #voke_method(:m6).must_equal [ nil, PARAMS ]
+        voke_method(:m4).must_equal [ OPTIONS, nil ]
+        voke_method(:m5).must_equal [ nil, OPTIONS ]
+        voke_method(:m6).must_equal [ OPTIONS, nil ]
 
-        lambda { voke_method(:n2) }.must_raise ArgumentError
-        voke_method(:n3).must_equal [ PARAMS ]
-        voke_method(:n4).must_equal [ PARAMS ]
+        voke_method(:n2).must_equal [ OPTIONS ]
+        voke_method(:n3).must_equal [ OPTIONS ]
+        voke_method(:n4).must_equal [ OPTIONS ]
       end
 
       it "calls with one argument" do
-        voke_method(:m3, ARG1).must_equal [ ARG1, PARAMS ]
-        voke_method(:m4, ARG1).must_equal [ ARG1, PARAMS ]
-        voke_method(:m5, ARG1).must_equal [ ARG1, PARAMS ]
-        voke_method(:m6, ARG1).must_equal [ ARG1, PARAMS ]
+        voke_method(:m3, ARG1).must_equal [ ARG1, OPTIONS ]
+        voke_method(:m4, ARG1).must_equal [ ARG1, OPTIONS ]
+        voke_method(:m5, ARG1).must_equal [ ARG1, OPTIONS ]
+        voke_method(:m6, ARG1).must_equal [ ARG1, OPTIONS ]
 
-        voke_method(:n2, ARG1).must_equal [ ARG1, PARAMS ]
-        voke_method(:n3, ARG1).must_equal [ ARG1, PARAMS ]
-        voke_method(:n4, ARG1).must_equal [ ARG1, PARAMS ]
+        voke_method(:n2, ARG1).must_equal [ ARG1, OPTIONS ]
+        voke_method(:n3, ARG1).must_equal [ ARG1, OPTIONS ]
+        voke_method(:n4, ARG1).must_equal [ ARG1, OPTIONS ]
       end
 
       it "calls with two arguments" do
-        voke_method(:m3, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
-        voke_method(:m4, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
-        voke_method(:m5, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
-        voke_method(:m6, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
+        lambda { voke_method(:m3, ARG1, ARG2) }.must_raise ArgumentError
+        lambda { voke_method(:m4, ARG1, ARG2) }.must_raise ArgumentError
+        lambda { voke_method(:m5, ARG1, ARG2) }.must_raise ArgumentError
+        lambda { voke_method(:m6, ARG1, ARG2) }.must_raise ArgumentError
 
-        voke_method(:n2, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
-        voke_method(:n3, ARG1, ARG2).must_equal [ ARG1, ARG2 ]
-        voke_method(:n4, ARG1, ARG2).must_equal [ ARG1, ARG2 ] # not ideal
+        voke_method(:n2, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:n3, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:n4, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
       end
     end
 
@@ -216,8 +222,12 @@ describe Voke do
           def m10(a,b=nil,c=nil);[a,b,c];end
           def m11(a=nil,b,c);[a,b,c];end
           #def m12(a=nil,b,c=nil);[a,b,c];end # does not exist
-          def m13(a=nil,b=nil,c);[a,b,c];end
-          def m14(a=nil,b=nil,c=nil);[a,b,c];end
+          def m12(a=nil,b=nil,c);[a,b,c];end
+          def m13(a=nil,b=nil,c=nil);[a,b,c];end
+
+          def n5(a,b,*c);[a,b]+c;end
+          def n6(a,*b,c);[a]+b+[c];end
+          def n7(*a,b,c);a+[b,c];end
         end
       end
 
@@ -225,43 +235,58 @@ describe Voke do
         lambda { voke_method(:m7) }.must_raise ArgumentError
         lambda { voke_method(:m8) }.must_raise ArgumentError
         lambda { voke_method(:m9) }.must_raise ArgumentError
-        lambda { voke_method(:m10) }.must_raise ArgumentError
+        voke_method(:m10).must_equal [ OPTIONS, nil, nil ]
         lambda { voke_method(:m11) }.must_raise ArgumentError
-        voke_method(:m13).must_equal [ nil, nil, PARAMS ]
-        voke_method(:m14).must_equal [ PARAMS, nil, nil ] # not ideal
-        #voke_method(:m14).must_equal [ nil, nil, PARAMS ]
+        voke_method(:m12).must_equal [ nil, nil, OPTIONS ]
+        voke_method(:m13).must_equal [ OPTIONS, nil, nil ]
+
+        lambda { voke_method(:n5) }.must_raise ArgumentError
+        lambda { voke_method(:n6) }.must_raise ArgumentError
+        lambda { voke_method(:n7) }.must_raise ArgumentError
       end
 
       it "calls with one argument" do
         lambda { voke_method(:m7, ARG1) }.must_raise ArgumentError
-        lambda { voke_method(:m8, ARG1) }.must_raise ArgumentError
-        voke_method(:m9, ARG1).must_equal [ ARG1, nil, PARAMS ]
-        voke_method(:m10, ARG1).must_equal [ ARG1, PARAMS, nil ] # not ideal
-        #voke_method(:m10, ARG1).must_equal [ ARG1, nil, PARAMS ]
-        voke_method(:m11, ARG1).must_equal [ nil, ARG1, PARAMS ]
-        voke_method(:m13, ARG1).must_equal [ ARG1, nil, PARAMS ]
-        voke_method(:m14, ARG1).must_equal [ ARG1, PARAMS, nil ] # not ideal
-        #voke_method(:m14, ARG1).must_equal [ ARG1, nil, PARAMS ]
+        voke_method(:m8, ARG1).must_equal [ ARG1, OPTIONS, nil ]
+        voke_method(:m9, ARG1).must_equal [ ARG1, nil, OPTIONS ]
+        voke_method(:m10, ARG1).must_equal [ ARG1, OPTIONS, nil ] # not ideal
+        #voke_method(:m10, ARG1).must_equal [ ARG1, nil, OPTIONS ]
+        voke_method(:m11, ARG1).must_equal [ nil, ARG1, OPTIONS ]
+        voke_method(:m12, ARG1).must_equal [ ARG1, nil, OPTIONS ]
+        voke_method(:m13, ARG1).must_equal [ ARG1, OPTIONS, nil ] # not ideal
+        #voke_method(:m13, ARG1).must_equal [ ARG1, nil, OPTIONS ]
+
+        lambda { voke_method(:n5) }.must_raise ArgumentError
+        lambda { voke_method(:n6) }.must_raise ArgumentError
+        lambda { voke_method(:n7) }.must_raise ArgumentError
       end
 
       it "calls with two arguments" do
-        voke_method(:m7, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m8, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m9, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m10, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m11, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m13, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
-        voke_method(:m14, ARG1, ARG2).must_equal [ ARG1, ARG2, PARAMS ]
+        voke_method(:m7, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m8, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m9, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m10, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m11, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m12, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:m13, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+
+        voke_method(:n5, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:n6, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
+        voke_method(:n7, ARG1, ARG2).must_equal [ ARG1, ARG2, OPTIONS ]
       end
 
       it "calls with three arguments" do
-        voke_method(:m7, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m8, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m9, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m10, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m11, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m13, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
-        voke_method(:m14, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3 ]
+        lambda { voke_method(:m7, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m8, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m9, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m10, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m11, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m12, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+        lambda { voke_method(:m13, ARG1, ARG2, ARG3) }.must_raise ArgumentError
+
+        voke_method(:n5, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3, OPTIONS ]
+        voke_method(:n6, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3, OPTIONS ]
+        voke_method(:n7, ARG1, ARG2, ARG3).must_equal [ ARG1, ARG2, ARG3, OPTIONS ]
       end
     end
   end
