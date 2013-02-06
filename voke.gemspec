@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = Voke::VERSION
   gem.authors       = ["Luke Curley"]
   gem.email         = ["qpingu@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Minimal CLI}
+  gem.summary       = %q{Minimal CLI}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)
