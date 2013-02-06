@@ -4,10 +4,15 @@ require 'voke'
 class Arguments
   include Voke
 
-  def self.list(*args, options)
+  default :greet, "world"
+  default :excited do |options|
+    options[:greet] == "world"
+  end
+
+  def list(*args, options)
     puts "arguments: #{ args.inspect }"
     puts "options: #{ options.inspect }"
   end
 end
 
-Arguments.voke("list", *ARGV)
+Arguments.new.voke("list", *ARGV)
